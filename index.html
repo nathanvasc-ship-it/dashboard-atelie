@@ -188,8 +188,12 @@ const PROXIES=[
   u=>'https://thingproxy.freeboard.io/fetch/'+u,
 ];
 async function tryFetch(url){
+  const bust=url+(url.includes('?')?'&':'?')+'_cb='+Date.now();
   for(const proxy of PROXIES){
-    try{const r=await fetch(proxy(url));if(r.ok){const t=await r.text();if(t&&t.length>50)return t;}}catch(e){continue;}
+    try{
+      const r=await fetch(proxy(bust),{cache:'no-store'});
+      if(r.ok){const t=await r.text();if(t&&t.length>50)return t;}
+    }catch(e){continue;}
   }
   throw new Error('Todos os proxies falharam. Verifique sua conexão.');
 }
