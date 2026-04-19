@@ -227,6 +227,14 @@ function parseCSV(text,detectHeader){
   return rows;
 }
 function get(obj,keys){for(const k of keys){const n=norm(k);if(obj[n]!==undefined)return obj[n];}return'';}
+function getAny(obj,keys){
+  for(const k of keys){
+    const needle=norm(k).replace(/[()\s_]/g,'');
+    const found=Object.keys(obj).find(ok=>norm(ok).replace(/[()\s_]/g,'')===needle);
+    if(found!==undefined&&obj[found]!=='')return obj[found];
+  }
+  return get(obj,keys);
+}
 function parseValor(v){if(!v)return 0;return parseFloat(v.replace(/R\$|\s/g,'').replace(/\./g,'').replace(',','.'))||0;}
 
 /* ── VENDAS ── */
@@ -464,15 +472,19 @@ async function fetchPrecificacao(){
     const text=await tryFetch(PREC_URL);
     const rows=parseCSV(text,l=>{const n=norm(l);return(n.includes('codigo')||n.includes('produto'))&&n.includes('preco');});
     if(!rows.length) throw new Error('Não foi possível encontrar os dados de precificação. Verifique os cabeçalhos da aba.');
-    produtos=rows.map(r=>({
-      cod: get(r,['codigo','cod','cod_produto','code']),
-      nome: get(r,['produto','produtos','nome']),
-      categoria: get(r,['categoria']),
-      custo: parseValor(get(r,['custo unitario','custo_unitario','custo unitário','custo'])),
-      precoAtual: parseValor(get(r,['preco venda','preco_venda','preço venda','preço de venda','preco'])),
-      mo: parseValor(get(r,['mao de obra','mao_de_obra','mão de obra','mo'])),
-      tempoMin: parseInt(get(r,['tempo(min)','tempo (min)','tempo min','tempo']))||0,
-    })).filter(r=>r.nome);
+    produtos=rows.map(r=>{
+      const moVal=parseValor(getAny(r,['mao de obra','mao_de_obra','mao de obra','mo']));
+      const tempoVal=parseInt(getAny(r,['tempo(min)','tempo (min)','tempmin','tempo min','tempo']))||0;
+      return {
+        cod: getAny(r,['codigo','cod','cod_produto','code']),
+        nome: getAny(r,['produto','produtos','nome']),
+        categoria: getAny(r,['categoria']),
+        custo: parseValor(getAny(r,['custo unitario','custo_unitario','custo unitario','custo'])),
+        precoAtual: parseValor(getAny(r,['preco venda','preco_venda','preco de venda','preco'])),
+        mo: moVal,
+        tempoMin: tempoVal>0 ? tempoVal : (moVal>0 ? Math.round((moVal/18)*60) : 45),
+      };
+    }).filter(r=>r.nome);
     produtos.forEach(p=>{ if(!tempos[p.cod]) tempos[p.cod]=p.tempoMin; });
     document.getElementById('p-loadingBox').style.display='none';
     updateP();
