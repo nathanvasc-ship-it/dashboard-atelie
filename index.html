@@ -73,7 +73,7 @@ input[type=number]{width:62px;padding:3px 5px;font-size:11px;border:0.5px solid 
   <button class="nav-tab active" data-page="vendas">Vendas</button>
   <button class="nav-tab" data-page="precificacao">Precificação</button>
   <div class="nav-right">
-    <span style="font-size:10px;color:#9b9b97;padding:0 8px;border-right:0.5px solid rgba(0,0,0,0.08)">v1.1</span>
+    <span style="font-size:10px;color:#9b9b97;padding:0 8px;border-right:0.5px solid rgba(0,0,0,0.08)">v1.2</span>
     <a href="calculadora.html" style="font-size:12px;padding:5px 12px;border-radius:8px;border:0.5px solid rgba(0,0,0,0.2);background:#1D9E75;color:#fff;text-decoration:none;font-weight:500;white-space:nowrap">Calculadora de preços</a>
     <span class="last-update" id="lastUpdate"></span>
     <button class="refresh-btn" id="refreshBtn">Atualizar</button>
@@ -268,7 +268,6 @@ async function fetchVendas(){
   try{
     const text=await tryFetch(VENDAS_URL);
     const rows=parseCSV(text,l=>{const n=norm(l);return n.includes('data')&&(n.includes('produto')||n.includes('valor'));});
-    console.log('Produtos carregados para cruzamento:', produtos.length, produtos.slice(0,2));
     allVendas=rows.map(r=>{
       const cod=get(r,['cod_produto','cod produto','codigo']);
       const pref=produtos.find(p=>String(p.cod).trim()===String(cod).trim());
@@ -285,7 +284,6 @@ async function fetchVendas(){
         tempoMin:pref?pref.tempoMin:0,
       };
     }).filter(r=>r.data||r.produto||r.cliente);
-    console.log('Vendas mapeadas (primeiras 2):', allVendas.slice(0,2).map(v=>({cod:v.cod,produto:v.produto,mo:v.mo,tempoMin:v.tempoMin,custoUnit:v.custoUnit})));
     populateMeses();populateStatusFilter();renderVendas();
     document.getElementById('loadingBox').style.display='none';
     document.getElementById('vendas-content').style.display='block';
@@ -332,11 +330,12 @@ function filteredVendas(){
 function pct(v,total){return total>0?(v/total*100).toFixed(1)+'%':'—';}
 
 function renderMetrics(fv){
+  const valorHora=18.18;
   const pagas=fv.filter(v=>v.status==='Pago');
   const total=pagas.reduce((a,v)=>a+v.valor,0);
   const ticket=pagas.length?total/pagas.length:0;
   const cortesias=fv.filter(v=>v.status==='Cortesia').length;
-  const totalMO=pagas.reduce((a,v)=>a+(v.mo||0),0);
+  const totalMO=pagas.reduce((a,v)=>a+((v.tempoMin||0)/60)*valorHora,0);
   const totalCusto=pagas.reduce((a,v)=>a+(v.custoUnit||0),0);
   const lucroLiq=total-totalCusto-totalMO;
   const pctCusto=pct(totalCusto,total);
