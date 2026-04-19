@@ -85,6 +85,11 @@ input[type=number]{width:62px;padding:3px 5px;font-size:11px;border:0.5px solid 
   <div id="errorBox" style="display:none"></div>
   <div id="loadingBox" class="loading">Buscando dados da planilha...</div>
   <div id="vendas-content" style="display:none">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12px;color:#6b6b68">
+      <label for="valorHoraInput">Valor da hora (R$):</label>
+      <input type="number" id="valorHoraInput" min="10" max="100" step="0.5" value="37.5" style="width:72px;padding:4px 6px;font-size:13px;font-weight:500;border:0.5px solid rgba(0,0,0,0.18);border-radius:6px;background:#fff;color:#1a1a1a;text-align:right">
+      <span style="font-size:11px;color:#9b9b97">/hora · usado no cálculo da MO</span>
+    </div>
     <div class="metric-grid" id="metrics"></div>
     <div class="charts-row">
       <div class="chart-box">
@@ -330,7 +335,7 @@ function filteredVendas(){
 function pct(v,total){return total>0?(v/total*100).toFixed(1)+'%':'—';}
 
 function renderMetrics(fv){
-  const valorHora=18.18;
+  const valorHora=parseFloat(document.getElementById('valorHoraInput').value)||37.5;
   const pagas=fv.filter(v=>v.status==='Pago');
   const total=pagas.reduce((a,v)=>a+v.valor,0);
   const ticket=pagas.length?total/pagas.length:0;
@@ -463,6 +468,7 @@ function renderVendas(){
 }
 
 document.getElementById('selMes').addEventListener('change',e=>{mesFiltro=e.target.value;renderVendas();});
+document.getElementById('valorHoraInput').addEventListener('input',()=>renderVendas());
 document.getElementById('sortBtns').addEventListener('click',e=>{
   const btn=e.target.closest('.fbtn');if(!btn)return;
   sortMode=btn.dataset.sort;
