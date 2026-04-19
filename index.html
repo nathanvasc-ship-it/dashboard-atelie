@@ -72,8 +72,9 @@ input[type=number]{width:62px;padding:3px 5px;font-size:11px;border:0.5px solid 
   <span class="nav-brand">Ateliê</span>
   <button class="nav-tab active" data-page="vendas">Vendas</button>
   <button class="nav-tab" data-page="precificacao">Precificação</button>
+  <button class="nav-tab" data-page="simulador">Simulador</button>
   <div class="nav-right">
-    <span style="font-size:10px;color:#9b9b97;padding:0 8px;border-right:0.5px solid rgba(0,0,0,0.08)">v1.2</span>
+    <span style="font-size:10px;color:#9b9b97;padding:0 8px;border-right:0.5px solid rgba(0,0,0,0.08)">v1.4</span>
     <a href="calculadora.html" style="font-size:12px;padding:5px 12px;border-radius:8px;border:0.5px solid rgba(0,0,0,0.2);background:#1D9E75;color:#fff;text-decoration:none;font-weight:500;white-space:nowrap">Calculadora de preços</a>
     <span class="last-update" id="lastUpdate"></span>
     <button class="refresh-btn" id="refreshBtn">Atualizar</button>
@@ -87,7 +88,7 @@ input[type=number]{width:62px;padding:3px 5px;font-size:11px;border:0.5px solid 
   <div id="vendas-content" style="display:none">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12px;color:#6b6b68">
       <label for="valorHoraInput">Valor da hora (R$):</label>
-      <input type="number" id="valorHoraInput" min="10" max="100" step="0.5" value="37.5" style="width:72px;padding:4px 6px;font-size:13px;font-weight:500;border:0.5px solid rgba(0,0,0,0.18);border-radius:6px;background:#fff;color:#1a1a1a;text-align:right">
+      <input type="number" id="valorHoraInput" min="10" max="100" step="0.5" value="80" style="width:72px;padding:4px 6px;font-size:13px;font-weight:500;border:0.5px solid rgba(0,0,0,0.18);border-radius:6px;background:#fff;color:#1a1a1a;text-align:right">
       <span style="font-size:11px;color:#9b9b97">/hora · usado no cálculo da MO</span>
     </div>
     <div class="metric-grid" id="metrics"></div>
@@ -178,6 +179,56 @@ input[type=number]{width:62px;padding:3px 5px;font-size:11px;border:0.5px solid 
           </thead>
           <tbody id="ptbody"></tbody>
         </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SIMULADOR -->
+<div class="page" id="page-simulador">
+  <div class="card">
+    <div style="font-size:13px;font-weight:500;margin-bottom:4px">Simulador de margem</div>
+    <p style="font-size:11px;color:#9b9b97;margin-bottom:16px">Ajuste os valores e veja em tempo real como custo, mão de obra e lucro se dividem no preço de venda.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;margin-bottom:20px">
+      <div>
+        <label style="font-size:12px;color:#6b6b68;display:block;margin-bottom:4px">Preço de venda (R$)</label>
+        <input type="number" id="sim-preco" min="1" max="2000" step="5" value="200" style="width:100%;padding:6px 8px;font-size:14px;font-weight:500;border:0.5px solid rgba(0,0,0,0.18);border-radius:6px;background:#fff;color:#1a1a1a;text-align:right">
+      </div>
+      <div>
+        <label style="font-size:12px;color:#6b6b68;display:block;margin-bottom:4px">Custo material (R$)</label>
+        <input type="number" id="sim-custo" min="0" max="1000" step="1" value="60" style="width:100%;padding:6px 8px;font-size:14px;font-weight:500;border:0.5px solid rgba(0,0,0,0.18);border-radius:6px;background:#fff;color:#1a1a1a;text-align:right">
+      </div>
+      <div>
+        <label style="font-size:12px;color:#6b6b68;display:block;margin-bottom:4px">Tempo produção (min)</label>
+        <input type="number" id="sim-tempo" min="5" max="480" step="5" value="30" style="width:100%;padding:6px 8px;font-size:14px;font-weight:500;border:0.5px solid rgba(0,0,0,0.18);border-radius:6px;background:#fff;color:#1a1a1a;text-align:right">
+      </div>
+      <div>
+        <label style="font-size:12px;color:#6b6b68;display:block;margin-bottom:4px">Valor da hora (R$)</label>
+        <input type="number" id="sim-hora" min="10" max="200" step="0.5" value="80" style="width:100%;padding:6px 8px;font-size:14px;font-weight:500;border:0.5px solid rgba(0,0,0,0.18);border-radius:6px;background:#fff;color:#1a1a1a;text-align:right">
+      </div>
+    </div>
+
+    <div id="sim-bar" style="display:flex;height:44px;border-radius:8px;overflow:hidden;margin-bottom:16px"></div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;font-size:11px">
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#D85A30"></span>Custo material</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#378ADD"></span>Mão de obra</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#1D9E75"></span>Lucro</span>
+    </div>
+
+    <div class="metric-grid" id="sim-metrics" style="margin-bottom:16px"></div>
+
+    <div id="sim-diag" style="border-radius:8px;padding:12px 16px;font-size:12px;margin-bottom:16px"></div>
+
+    <div id="sim-sugestao" style="border-radius:8px;padding:14px 16px;margin-bottom:16px;display:none"></div>
+
+    <div style="border-top:0.5px solid rgba(0,0,0,0.08);padding-top:12px">
+      <div style="font-size:11px;font-weight:500;color:#6b6b68;margin-bottom:8px">Faixas saudáveis para ateliê artesanal</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <div style="font-size:11px;color:#6b6b68;background:#f5f4f0;border-radius:6px;padding:8px 10px"><span style="color:#D85A30;font-weight:500">Custo material</span><br>ideal: 10–25%</div>
+        <div style="font-size:11px;color:#6b6b68;background:#f5f4f0;border-radius:6px;padding:8px 10px"><span style="color:#378ADD;font-weight:500">Mão de obra</span><br>ideal: 25–35%</div>
+        <div style="font-size:11px;color:#6b6b68;background:#f5f4f0;border-radius:6px;padding:8px 10px"><span style="color:#1D9E75;font-weight:500">Lucro</span><br>ideal: 40–55%</div>
       </div>
     </div>
   </div>
@@ -335,7 +386,7 @@ function filteredVendas(){
 function pct(v,total){return total>0?(v/total*100).toFixed(1)+'%':'—';}
 
 function renderMetrics(fv){
-  const valorHora=parseFloat(document.getElementById('valorHoraInput').value)||37.5;
+  const valorHora=parseFloat(document.getElementById('valorHoraInput').value)||80;
   const pagas=fv.filter(v=>v.status==='Pago');
   const total=pagas.reduce((a,v)=>a+v.valor,0);
   const ticket=pagas.length?total/pagas.length:0;
@@ -580,6 +631,101 @@ function updateP(){
   renderPMetrics(p);renderPTable(p);
 }
 ['meta','horas','dias'].forEach(id=>document.getElementById(id).addEventListener('input',updateP));
+
+/* ── SIMULADOR ── */
+function simFmt(v){return'R$ '+v.toFixed(2).replace('.',',');}
+function updateSim(){
+  const preco=parseFloat(document.getElementById('sim-preco').value)||200;
+  const custo=parseFloat(document.getElementById('sim-custo').value)||0;
+  const tempo=parseFloat(document.getElementById('sim-tempo').value)||30;
+  const hora=parseFloat(document.getElementById('sim-hora').value)||80;
+  const mo=(tempo/60)*hora;
+  const lucro=Math.max(0,preco-custo-mo);
+  const pC=preco>0?custo/preco*100:0;
+  const pM=preco>0?mo/preco*100:0;
+  const pL=preco>0?lucro/preco*100:0;
+  const prejuizo=custo+mo>=preco;
+
+  document.getElementById('sim-bar').innerHTML=prejuizo
+    ?'<div style="width:100%;background:#A32D2D;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:500">Prejuízo — custo + MO supera o preço</div>'
+    :`<div style="width:${pC}%;background:#D85A30;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:500">${pC>=8?Math.round(pC)+'%':''}</div>`
+    +`<div style="width:${pM}%;background:#378ADD;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:500">${pM>=8?Math.round(pM)+'%':''}</div>`
+    +`<div style="width:${pL}%;background:#1D9E75;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:500">${pL>=8?Math.round(pL)+'%':''}</div>`;
+
+  const cCor=pC>30?'#A32D2D':pC>25?'#BA7517':'#1D9E75';
+  const mCor=pM>40?'#A32D2D':pM>35?'#BA7517':'#378ADD';
+  const lCor=pL<30?'#A32D2D':pL<40?'#BA7517':'#1D9E75';
+
+  const ckC=pC>=10&&pC<=25;
+  const ckM=pM>=25&&pM<=35;
+  const ckL=pL>=40;
+  const ico=(ok)=>ok?'<span style="display:inline-block;width:18px;height:18px;border-radius:50%;background:#E1F5EE;color:#085041;font-size:11px;text-align:center;line-height:18px;font-weight:500;flex-shrink:0">&#10003;</span>':'<span style="display:inline-block;width:18px;height:18px;border-radius:50%;background:#FCEBEB;color:#791F1F;font-size:11px;text-align:center;line-height:18px;font-weight:500;flex-shrink:0">&#10005;</span>';
+
+  document.getElementById('sim-metrics').innerHTML=`
+    <div class="metric"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">${ico(ckC)}<span class="ml" style="margin:0">Custo material</span></div><div class="mv" style="color:#D85A30">${simFmt(custo)}</div><div class="ms" style="color:${cCor};font-weight:500">${Math.round(pC)}% do preço ${ckC?'· ideal':'· fora da faixa'}</div></div>
+    <div class="metric"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">${ico(ckM)}<span class="ml" style="margin:0">Mão de obra</span></div><div class="mv" style="color:#378ADD">${simFmt(mo)}</div><div class="ms" style="color:${mCor};font-weight:500">${Math.round(pM)}% do preço ${ckM?'· ideal':'· fora da faixa'}</div></div>
+    <div class="metric" style="background:${ckL?'#E1F5EE':'#f5f4f0'}"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">${ico(ckL)}<span class="ml" style="margin:0;color:${ckL?'#085041':'#6b6b68'}">Lucro líquido</span></div><div class="mv" style="color:${lCor}">${simFmt(lucro)}</div><div class="ms" style="color:${lCor};font-weight:500">${Math.round(pL)}% do preço ${ckL?'· ideal':'· fora da faixa'}</div></div>
+    <div class="metric"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">${ico(ckC&&ckM&&ckL)}<span class="ml" style="margin:0">Equilíbrio geral</span></div><div class="mv">${ckC&&ckM&&ckL?'Saudável':'Ajustar'}</div><div class="ms" style="color:${ckC&&ckM&&ckL?'#085041':'#BA7517'};font-weight:500">${[ckC,ckM,ckL].filter(Boolean).length}/3 faixas ok</div></div>`;
+
+  const sug=document.getElementById('sim-sugestao');
+  const custoTotal=custo+mo;
+  const precoMin=Math.ceil((custoTotal/(1-0.40))/5)*5;
+  const precoIdeal=Math.ceil((custoTotal/(1-0.50))/5)*5;
+  const precoOtimo=Math.ceil((custoTotal/(1-0.55))/5)*5;
+  if(!prejuizo){
+    sug.style.display='block';
+    sug.style.background='#f5f4f0';
+    sug.style.color='#1a1a1a';
+    sug.innerHTML=`
+      <div style="font-size:12px;font-weight:500;color:#6b6b68;margin-bottom:10px">Sugestão de preço baseada nos custos atuais</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        <div style="background:#fff;border-radius:6px;padding:10px 12px;border-left:3px solid #BA7517">
+          <div style="font-size:10px;color:#BA7517;font-weight:500;margin-bottom:2px">Mínimo (40% lucro)</div>
+          <div style="font-size:18px;font-weight:500;color:#1a1a1a">${simFmt(precoMin)}</div>
+          <div style="font-size:10px;color:#9b9b97;margin-top:2px">${preco>=precoMin?'&#10003; preço atual ok':'&#9888; preço atual abaixo'}</div>
+        </div>
+        <div style="background:#fff;border-radius:6px;padding:10px 12px;border-left:3px solid #1D9E75">
+          <div style="font-size:10px;color:#1D9E75;font-weight:500;margin-bottom:2px">Ideal (50% lucro)</div>
+          <div style="font-size:18px;font-weight:500;color:#1a1a1a">${simFmt(precoIdeal)}</div>
+          <div style="font-size:10px;color:#9b9b97;margin-top:2px">${preco>=precoIdeal?'&#10003; preço atual ok':'&#9650; considere subir'}</div>
+        </div>
+        <div style="background:#fff;border-radius:6px;padding:10px 12px;border-left:3px solid #085041">
+          <div style="font-size:10px;color:#085041;font-weight:500;margin-bottom:2px">Ótimo (55% lucro)</div>
+          <div style="font-size:18px;font-weight:500;color:#1a1a1a">${simFmt(precoOtimo)}</div>
+          <div style="font-size:10px;color:#9b9b97;margin-top:2px">${preco>=precoOtimo?'&#10003; preço acima':'meta premium'}</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#9b9b97;margin-top:10px">Calculado com custo total de ${simFmt(custoTotal)} (material ${simFmt(custo)} + MO ${simFmt(mo)})</div>`;
+  } else {
+    sug.style.display='block';
+    sug.style.background='#FCEBEB';
+    sug.style.color='#791F1F';
+    sug.innerHTML=`
+      <div style="font-size:12px;font-weight:500;margin-bottom:6px">Preço mínimo necessário</div>
+      <div style="font-size:11px">O custo total é ${simFmt(custoTotal)}. Para ter pelo menos 40% de lucro, o preço mínimo deveria ser <strong>${simFmt(precoMin)}</strong>.</div>`;
+  }
+
+  const diag=document.getElementById('sim-diag');
+  let msgs=[];
+  if(prejuizo) msgs.push('⚠ O preço não cobre custos + mão de obra. Está no prejuízo.');
+  else{
+    if(pC>30) msgs.push('Custo de material alto ('+Math.round(pC)+'%). Ideal: abaixo de 25%.');
+    else if(pC<=25) msgs.push('✓ Custo de material dentro do ideal ('+Math.round(pC)+'%).');
+    if(pM>40) msgs.push('MO acima de 40% — considere aumentar o preço ou reduzir o tempo.');
+    else if(pM>=25&&pM<=35) msgs.push('✓ Mão de obra dentro da faixa saudável ('+Math.round(pM)+'%).');
+    else if(pM<25) msgs.push('MO baixa ('+Math.round(pM)+'%). O valor/hora pode estar subvalorizado.');
+    if(pL<30) msgs.push('Lucro de apenas '+Math.round(pL)+'%. Mínimo saudável: 40%.');
+    else if(pL>=40&&pL<55) msgs.push('✓ Margem de lucro saudável ('+Math.round(pL)+'%).');
+    else if(pL>=55) msgs.push('✓ Margem excelente ('+Math.round(pL)+'%).');
+  }
+  const isGood=!prejuizo&&pC<=25&&pM<=35&&pL>=40;
+  const isBad=prejuizo||pL<30;
+  diag.style.background=isBad?'#FCEBEB':isGood?'#E1F5EE':'#FAEEDA';
+  diag.style.color=isBad?'#791F1F':isGood?'#085041':'#633806';
+  diag.innerHTML=msgs.join('<br>');
+}
+['sim-preco','sim-custo','sim-tempo','sim-hora'].forEach(id=>document.getElementById(id).addEventListener('input',updateSim));
+updateSim();
 
 /* ── INIT ── */
 fetchPrecificacao().then(()=>fetchVendas());
