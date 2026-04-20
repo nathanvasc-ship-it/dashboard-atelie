@@ -402,11 +402,32 @@ function renderMetrics(fv){
   const pctCusto=pct(totalCusto,total);
   const pctMO=pct(totalMO,total);
   const pctLucro=pct(lucroLiq,total);
+
+  function tip(valor,tipo,tot){
+    let p=tot>0?(valor/tot*100):0;
+    let st='',cor='';
+    if(tipo==='custo'){
+      if(p<=25){st='✓ Saudável (ideal: 10-25%)';cor='#085041';}
+      else if(p<=30){st='⚠ Aceitável (ideal: até 25%)';cor='#633806';}
+      else{st='✗ Alto (ideal: até 25%)';cor='#791F1F';}
+    }else if(tipo==='mo'){
+      if(p>=25&&p<=35){st='✓ Saudável (ideal: 25-35%)';cor='#085041';}
+      else if(p<25){st='⚠ Baixa (ideal: 25-35%)';cor='#633806';}
+      else{st='⚠ Alta (ideal: até 35%)';cor='#BA7517';}
+    }else{
+      if(p>=55){st='✓ Excelente (acima de 55%)';cor='#085041';}
+      else if(p>=40){st='✓ Saudável (ideal: 40-55%)';cor='#085041';}
+      else if(p>=30){st='⚠ Abaixo (ideal: 40-55%)';cor='#BA7517';}
+      else{st='✗ Crítico (ideal: mín 40%)';cor='#791F1F';}
+    }
+    return `<span style="cursor:help;border-bottom:1px dotted ${cor}" title="${st}">${Math.round(p)}%</span>`;
+  }
+
   document.getElementById('metrics').innerHTML=`
     <div class="metric"><div class="ml">Receita total</div><div class="mv">R$ ${total.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div><div class="ms">100% das vendas pagas</div></div>
-    <div class="metric"><div class="ml">Custo de material</div><div class="mv" style="color:#D85A30">- R$ ${totalCusto.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div><div class="ms" style="color:#D85A30;font-weight:500">${pctCusto} da receita</div></div>
-    <div class="metric"><div class="ml">Mão de obra</div><div class="mv" style="color:#D85A30">- R$ ${totalMO.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div><div class="ms" style="color:#D85A30;font-weight:500">${pctMO} da receita</div></div>
-    <div class="metric" style="background:#E1F5EE"><div class="ml" style="color:#085041">Lucro líquido</div><div class="mv" style="color:#085041">R$ ${lucroLiq.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div><div class="ms" style="color:#0F6E56;font-weight:500">${pctLucro} da receita</div></div>
+    <div class="metric"><div class="ml">Custo de material</div><div class="mv" style="color:#D85A30">- R$ ${totalCusto.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div><div class="ms" style="font-weight:500">${tip(totalCusto,'custo',total)} da receita</div></div>
+    <div class="metric"><div class="ml">Mão de obra</div><div class="mv" style="color:#D85A30">- R$ ${totalMO.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div><div class="ms" style="font-weight:500">${tip(totalMO,'mo',total)} da receita</div></div>
+    <div class="metric" style="background:#E1F5EE"><div class="ml" style="color:#085041">Lucro líquido</div><div class="mv" style="color:#085041">R$ ${lucroLiq.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div><div class="ms" style="font-weight:500">${tip(lucroLiq,'lucro',total)} da receita</div></div>
     <div class="metric"><div class="ml">Pedidos</div><div class="mv">${fv.length}</div><div class="ms">${cortesias} cortesia(s)</div></div>
     <div class="metric"><div class="ml">Ticket médio</div><div class="mv">R$ ${ticket.toFixed(2).replace('.',',')}</div><div class="ms">pedidos pagos</div></div>
     <div class="metric"><div class="ml">Clientes únicos</div><div class="mv">${new Set(fv.map(v=>v.cliente).filter(Boolean)).size}</div><div class="ms">neste período</div></div>`;
