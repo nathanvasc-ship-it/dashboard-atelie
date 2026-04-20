@@ -71,10 +71,10 @@ input[type=number]{width:62px;padding:3px 5px;font-size:11px;border:0.5px solid 
 <nav>
   <span class="nav-brand">Ateliê</span>
   <button class="nav-tab active" data-page="vendas">Vendas</button>
-  <a href="calculadora.html" class="nav-tab" style="text-decoration:none;display:flex;align-items:center;gap:4px">Precificação<span style="font-size:10px">↗</span></a>
+  <button class="nav-tab" data-page="precificacao">Precificação</button>
   <button class="nav-tab" data-page="simulador">Simulador</button>
   <div class="nav-right">
-    <span style="font-size:10px;color:#9b9b97;padding:0 8px">v1.5</span>
+    <span style="font-size:10px;color:#9b9b97;padding:0 8px">v1.6</span>
     <span class="last-update" id="lastUpdate"></span>
     <button class="refresh-btn" id="refreshBtn">Atualizar</button>
   </div>
@@ -135,6 +135,55 @@ input[type=number]{width:62px;padding:3px 5px;font-size:11px;border:0.5px solid 
         <table>
           <thead><tr><th>Data</th><th>Cód.</th><th>Produto</th><th>Cliente</th><th class="r">Valor</th><th>Status</th><th>Situação</th></tr></thead>
           <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRECIFICAÇÃO -->
+<div class="page" id="page-precificacao">
+  <div id="prec-errorBox" style="display:none"></div>
+  <div id="prec-loadingBox" class="loading">Carregando dados de precificação...</div>
+  <div id="prec-content" style="display:none">
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12px;color:#6b6b68">
+        <label for="precValorHora">Valor da hora (R$):</label>
+        <input type="number" id="precValorHora" min="10" max="200" step="0.5" value="80" style="width:72px;padding:4px 6px;font-size:13px;font-weight:500;border:0.5px solid rgba(0,0,0,0.18);border-radius:6px;background:#fff;color:#1a1a1a;text-align:right">
+        <span style="font-size:11px;color:#9b9b97">/hora · base para MO de todos os produtos</span>
+      </div>
+      <div class="metric-grid" id="prec-metrics"></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:500">Precificação por produto</div>
+      </div>
+      <p style="font-size:11px;color:#9b9b97;margin-bottom:10px">Tempo da coluna "Tempo(min)" da planilha. Ajuste individualmente se necessário.</p>
+      <div id="prec-alertSummary" style="background:#fff8f0;border:0.5px solid #F0997B;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#712B13;display:none"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b6b68"><div style="width:10px;height:10px;border-radius:2px;background:#E1F5EE;border:0.5px solid #1D9E75"></div>Saudável (≥40%)</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b6b68"><div style="width:10px;height:10px;border-radius:2px;background:#FAEEDA;border:0.5px solid #EF9F27"></div>Baixa (30–39%)</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#6b6b68"><div style="width:10px;height:10px;border-radius:2px;background:#FCEBEB;border:0.5px solid #D85A30"></div>Crítica (&lt;30%)</div>
+      </div>
+      <div id="prec-catFilter" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px"></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:20%">Produto</th>
+              <th style="width:10%">Categoria</th>
+              <th class="r" style="width:7%">Custo mat.</th>
+              <th class="r" style="width:8%">Tempo (min)</th>
+              <th class="r" style="width:7%">MO</th>
+              <th class="r" style="width:7%">Custo total</th>
+              <th class="r" style="width:8%">Preço atual</th>
+              <th class="r" style="width:8%">Margem</th>
+              <th class="r" style="width:9%">Mínimo</th>
+              <th class="r" style="width:9%">Ideal</th>
+              <th class="r" style="width:7%">Status</th>
+            </tr>
+          </thead>
+          <tbody id="prec-tbody"></tbody>
         </table>
       </div>
     </div>
@@ -283,7 +332,7 @@ async function fetchVendas(){
     const rows=parseCSV(text,l=>{const n=norm(l);return n.includes('data')&&(n.includes('produto')||n.includes('valor'));});
     allVendas=rows.map(r=>{
       const cod=get(r,['cod_produto','cod produto','codigo']);
-      const pref=produtos.find(p=>String(p.cod).trim()===String(cod).trim());
+      const pref=precData.find(p=>String(p.cod).trim()===String(cod).trim());
       return{
         data:get(r,['data']),mes:getMes(get(r,['data'])),
         cod,
@@ -292,8 +341,7 @@ async function fetchVendas(){
         status:normStatus(get(r,['status'])),
         sit:normSit(get(r,['situacao','situaao','situação'])),
         cliente:get(r,['clientes','cliente']),
-        custoUnit:pref?pref.custo:0,
-        mo:pref?pref.mo:0,
+        custoUnit:pref?pref.custoUnit:0,
         tempoMin:pref?pref.tempoMin:0,
       };
     }).filter(r=>r.data||r.produto||r.cliente);
@@ -483,111 +531,152 @@ document.getElementById('sortBtns').addEventListener('click',e=>{
   document.querySelectorAll('#sortBtns .fbtn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');renderRanking(filteredVendas());
 });
-document.getElementById('refreshBtn').addEventListener('click',()=>{fetchPrecificacao().then(()=>fetchVendas());});
+document.getElementById('refreshBtn').addEventListener('click',()=>{fetchPrecificacao().then(()=>{initPrecTab();fetchVendas();});});
 
 /* ── PRECIFICAÇÃO ── */
 const PREC_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vStwozPUCnYfE3O-EJVpTrQtgdsttloV1O57Bw_WPLArse5TIUDozd48vz5rTid-Eartf3D92EczYhR/pub?gid=21694616&single=true&output=csv';
-let produtos=[];
-const tempos={};
+let precData=[];
 
 async function fetchPrecificacao(){
-  document.getElementById('p-loadingBox').style.display='block';
-  document.getElementById('p-errorBox').style.display='none';
   try{
     const text=await tryFetch(PREC_URL);
     const rows=parseCSV(text,l=>{const n=norm(l);return(n.includes('codigo')||n.includes('produto'))&&n.includes('preco');});
-    if(!rows.length) throw new Error('Não foi possível encontrar os dados de precificação. Verifique os cabeçalhos da aba.');
-    produtos=rows.map(r=>{
+    if(!rows.length) throw new Error('Cabeçalhos não encontrados.');
+    precData=rows.map(r=>{
       const moVal=parseValor(r['mao de obra']||'');
       const tempoVal=parseInt(r['tempo(min)']||r['tempo (min)']||'')||0;
       return {
         cod: r['codigo']||'',
         nome: r['produto']||'',
-        categoria: r['categoria']||'',
-        custo: parseValor(r['custo unitario']||''),
-        precoAtual: parseValor(r['preco venda']||''),
-        mo: moVal,
+        cat: r['categoria']||'',
+        custoUnit: parseValor(r['custo unitario']||''),
+        preco: parseValor(r['preco venda']||''),
         tempoMin: tempoVal>0 ? tempoVal : (moVal>0 ? Math.round((moVal/18)*60) : 45),
       };
     }).filter(r=>r.nome);
-    produtos.forEach(p=>{ if(!tempos[p.cod]) tempos[p.cod]=p.tempoMin; });
-    document.getElementById('p-loadingBox').style.display='none';
-    updateP();
   }catch(e){
-    document.getElementById('p-loadingBox').style.display='none';
-    const eb=document.getElementById('p-errorBox');
-    eb.style.display='block';
-    eb.innerHTML='<strong>Não foi possível carregar a precificação.</strong><br>'+e.message+'<details><summary>O que fazer?</summary>Verifique se a aba de precificação está publicada no Google Sheets e se os cabeçalhos incluem: Codigo, Produto, Categoria, Custo Unitário, Preço Venda.</details>';
+    const eb=document.getElementById('prec-errorBox');
+    if(eb){eb.style.display='block';eb.className='error-box';eb.innerHTML='<strong>Erro ao carregar precificação.</strong><br>'+e.message;}
   }
 }
 
-const R=v=>'R$ '+v.toFixed(2).replace('.',',');
-const Pct=v=>v.toFixed(1).replace('.',',')+' %';
+/* ── PRECIFICAÇÃO TAB ── */
+let precCatFiltro = 'Todas';
+function getPrecValorHora(){ return parseFloat(document.getElementById('precValorHora')?.value)||80; }
 
-function getParams(){
-  const meta=+document.getElementById('meta').value;
-  const horas=+document.getElementById('horas').value;
-  const dias=+document.getElementById('dias').value;
-  const totalHoras=horas*dias;
-  return{meta,horas,dias,totalHoras,valorHora:meta/totalHoras};
+function renderPrecMetrics(){
+  const vh = getPrecValorHora();
+  const prods = precData;
+  const total = prods.length;
+  if(!total) return;
+  const avgTempo = prods.reduce((a,p)=>a+(p.tempoMin||45),0)/total;
+  const avgMO = (avgTempo/60)*vh;
+  const abaixo40 = prods.filter(p=>{
+    const mo=((p.tempoMin||45)/60)*vh;
+    const ct=(p.custoUnit||0)+mo;
+    const mg=p.preco>0?((p.preco-ct)/p.preco)*100:0;
+    return mg<40;
+  }).length;
+  const abaixo30 = prods.filter(p=>{
+    const mo=((p.tempoMin||45)/60)*vh;
+    const ct=(p.custoUnit||0)+mo;
+    const mg=p.preco>0?((p.preco-ct)/p.preco)*100:0;
+    return mg<30;
+  }).length;
+  const ok = total - abaixo40;
+  const ckOk='<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;font-size:10px;font-weight:500;background:#E1F5EE;color:#085041">&#10003;</span>';
+  const ckBad='<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;font-size:10px;font-weight:500;background:#FCEBEB;color:#791F1F">&#10005;</span>';
+  document.getElementById('prec-metrics').innerHTML=`
+    <div class="metric"><div class="ml">Valor da hora</div><div class="mv">R$ ${vh.toFixed(2).replace('.',',')}</div><div class="ms">base para MO</div></div>
+    <div class="metric" style="background:${abaixo40===0?'#E1F5EE':'#f5f4f0'}"><div class="ml" style="color:${abaixo40===0?'#085041':'#6b6b68'}">Produtos saudáveis</div><div class="mv" style="color:${abaixo40===0?'#085041':'#1a1a1a'}">${ok}/${total} ${abaixo40===0?ckOk:ckBad}</div><div class="ms" style="color:${abaixo40===0?'#085041':'#9b9b97'}">margem ≥40%</div></div>
+    <div class="metric"><div class="ml">Precisam ajuste</div><div class="mv" style="color:${abaixo40>0?'#A32D2D':'#1a1a1a'}">${abaixo40}</div><div class="ms">${abaixo30} críticos (&lt;30%)</div></div>
+    <div class="metric"><div class="ml">Tempo médio</div><div class="mv">${Math.round(avgTempo)} min</div><div class="ms">MO: R$ ${avgMO.toFixed(2).replace('.',',')}</div></div>`;
 }
 
-function renderPMetrics(p){
-  document.getElementById('pmetrics').innerHTML=`
-    <div class="pmetric"><div class="mlabel">Meta mensal</div><div class="mval">${R(p.meta)}</div></div>
-    <div class="pmetric"><div class="mlabel">Horas/mês</div><div class="mval">${p.totalHoras.toFixed(0)}h</div><div class="msub">${p.horas}h × ${p.dias} dias</div></div>
-    <div class="pmetric"><div class="mlabel">Valor da hora</div><div class="mval">${R(p.valorHora)}</div><div class="msub">por hora trabalhada</div></div>
-    <div class="pmetric"><div class="mlabel">Margem alvo</div><div class="mval">60%+</div><div class="msub">considerando MO real</div></div>`;
-}
+function renderPrecTabela(){
+  const vh = getPrecValorHora();
+  const filtered = precCatFiltro==='Todas' ? precData : precData.filter(p=>p.cat===precCatFiltro);
+  let alertCount = 0;
+  let criticos = 0;
 
-function chipMargem(m){
-  if(m>=60)return'<span class="chip chip-ok">Ótimo</span>';
-  if(m>=45)return'<span class="chip chip-mid">OK</span>';
-  return'<span class="chip chip-bad">Baixo</span>';
-}
+  const rows = filtered.map(p=>{
+    const min = p.tempoMin||45;
+    const mo = (min/60)*vh;
+    const ct = (p.custoUnit||0) + mo;
+    const precoMin = Math.ceil((ct/(1-0.40))/5)*5;
+    const precoIdeal = Math.ceil((ct/(1-0.50))/5)*5;
+    const margem = p.preco>0?((p.preco-ct)/p.preco)*100:0;
+    const abaixo = margem<40;
+    if(abaixo) alertCount++;
+    if(margem<30) criticos++;
+    const ck = margem>=40
+      ?'<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;font-size:10px;font-weight:500;background:#E1F5EE;color:#085041;margin-left:4px">&#10003;</span>'
+      :'<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;font-size:10px;font-weight:500;background:#FCEBEB;color:#791F1F;margin-left:4px">&#10005;</span>';
+    const chip = margem>=40?'<span style="display:inline-block;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:500;background:#E1F5EE;color:#085041">Saudável</span>'
+      :margem>=30?'<span style="display:inline-block;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:500;background:#FAEEDA;color:#633806">Baixa</span>'
+      :'<span style="display:inline-block;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:500;background:#FCEBEB;color:#791F1F">Crítica</span>';
+    const warn = abaixo?'<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;background:#FCEBEB;color:#791F1F;margin-left:4px">&#9888; abaixo</span>':'';
 
-function renderPTable(p){
-  if(!produtos.length){
-    document.getElementById('ptbody').innerHTML='<tr><td colspan="11" style="text-align:center;color:#9b9b97;padding:1rem">Carregando dados da planilha...</td></tr>';
-    return;
-  }
-  document.getElementById('ptbody').innerHTML=produtos.map(prod=>{
-    const min=tempos[prod.cod]||prod.tempoMin||60;
-    const moReal=(min/60)*p.valorHora;
-    const custoTotal=prod.custo+moReal;
-    const sugerido=custoTotal/(1-0.60);
-    const margem=prod.precoAtual>0?((prod.precoAtual-custoTotal)/prod.precoAtual)*100:0;
-    const acima=sugerido>prod.precoAtual;
-    return`<tr>
-      <td style="font-size:11px;color:#9b9b97">${prod.cod}</td>
-      <td style="font-size:11px">${prod.nome}</td>
-      <td style="font-size:10px;color:#6b6b68;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px">${prod.categoria}</td>
-      <td class="r">${R(prod.custo)}</td>
-      <td class="r"><input type="number" min="5" max="480" step="5" value="${min}" style="width:58px;font-size:11px;padding:2px 4px" data-cod="${prod.cod}"></td>
-      <td class="r">${R(moReal)}</td>
-      <td class="r">${R(custoTotal)}</td>
-      <td class="r">${R(prod.precoAtual)}</td>
-      <td class="r" style="font-weight:500;color:${acima?'#993C1D':'#0F6E56'}">${R(Math.ceil(sugerido/5)*5)}</td>
-      <td class="r">${Pct(margem)}</td>
-      <td class="r">${chipMargem(margem)}</td>
+    return `<tr style="${abaixo?'background:#fff8f0':''}">
+      <td style="font-size:11px;${abaixo?'border-left:3px solid #D85A30;padding-left:5px':''}">${p.nome||p.cod}${warn}</td>
+      <td style="font-size:10px;color:#6b6b68">${(p.cat||'').length>14?(p.cat||'').slice(0,12)+'…':p.cat||''}</td>
+      <td class="r">R$ ${(p.custoUnit||0).toFixed(2).replace('.',',')}</td>
+      <td class="r"><input type="number" min="5" max="480" step="5" value="${min}" data-prec-cod="${p.cod}" style="width:52px;font-size:11px;padding:2px 4px;border:0.5px solid rgba(0,0,0,0.18);border-radius:6px;background:#fff;color:#1a1a1a"></td>
+      <td class="r">R$ ${mo.toFixed(2).replace('.',',')}</td>
+      <td class="r">R$ ${ct.toFixed(2).replace('.',',')}</td>
+      <td class="r">R$ ${(p.preco||0).toFixed(2).replace('.',',')}</td>
+      <td class="r" style="font-weight:500;color:${abaixo?'#A32D2D':'#1a1a1a'}">${margem.toFixed(1).replace('.',',')}% ${ck}</td>
+      <td class="r" style="font-size:11px;color:#BA7517">R$ ${precoMin.toFixed(2).replace('.',',')}</td>
+      <td class="r" style="font-size:11px;font-weight:500;color:#1D9E75">R$ ${precoIdeal.toFixed(2).replace('.',',')}</td>
+      <td class="r">${chip}</td>
     </tr>`;
-  }).join('');
-  document.querySelectorAll('input[data-cod]').forEach(inp=>{
+  });
+  document.getElementById('prec-tbody').innerHTML = rows.join('');
+
+  const summary = document.getElementById('prec-alertSummary');
+  if(alertCount>0){
+    summary.style.display='block';
+    summary.innerHTML = criticos>0
+      ?`<strong>&#9888; ${alertCount} produto${alertCount>1?'s':''} com margem abaixo de 40%</strong> (${criticos} crítico${criticos>1?'s':''} com &lt;30%)`
+      :`<strong>&#9888; ${alertCount} produto${alertCount>1?'s':''} com margem abaixo de 40%</strong>`;
+  } else { summary.style.display='none'; }
+
+  document.querySelectorAll('input[data-prec-cod]').forEach(inp=>{
     inp.addEventListener('change',e=>{
-      tempos[e.target.dataset.cod]=Math.max(5,+e.target.value||30);
-      renderPTable(getParams());
+      const cod=e.target.dataset.precCod;
+      const val=Math.max(5,+e.target.value||30);
+      const p=precData.find(x=>x.cod===cod);
+      if(p) p.tempoMin=val;
+      renderPrecAll();
     });
   });
 }
 
-function updateP(){
-  const p=getParams();
-  document.getElementById('meta-out').textContent='R$ '+p.meta.toLocaleString('pt-BR');
-  document.getElementById('horas-out').textContent=p.horas+'h';
-  document.getElementById('dias-out').textContent=p.dias+' dias';
-  renderPMetrics(p);renderPTable(p);
+function renderPrecCatFilter(){
+  const cats=['Todas',...new Set(precData.map(p=>p.cat).filter(Boolean))];
+  document.getElementById('prec-catFilter').innerHTML=cats.map(c=>`<button class="fbtn${c===precCatFiltro?' active':''}" data-prec-cat="${c}">${c}</button>`).join('');
+  document.querySelectorAll('[data-prec-cat]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      precCatFiltro=btn.dataset.precCat;
+      renderPrecCatFilter();
+      renderPrecTabela();
+    });
+  });
 }
-['meta','horas','dias'].forEach(id=>document.getElementById(id).addEventListener('input',updateP));
+
+function renderPrecAll(){
+  renderPrecMetrics();
+  renderPrecTabela();
+}
+
+function initPrecTab(){
+  if(!precData.length) return;
+  document.getElementById('prec-loadingBox').style.display='none';
+  document.getElementById('prec-content').style.display='block';
+  renderPrecCatFilter();
+  renderPrecAll();
+  document.getElementById('precValorHora')?.addEventListener('input', renderPrecAll);
+}
 
 /* ── SIMULADOR ── */
 function simFmt(v){return'R$ '+v.toFixed(2).replace('.',',');}
@@ -685,7 +774,7 @@ function updateSim(){
 updateSim();
 
 /* ── INIT ── */
-fetchPrecificacao().then(()=>fetchVendas());
+fetchPrecificacao().then(()=>{initPrecTab();fetchVendas();});
 </script>
 </body>
 </html>
