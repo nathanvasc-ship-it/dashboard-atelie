@@ -6,6 +6,12 @@
 <title>Calculadora de Precificação — Ateliê</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  nav { background: #fff; border-bottom: 0.5px solid rgba(0,0,0,0.1); padding: 0; margin: -2rem -1rem 2rem; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+  .nav-brand { font-size: 16px; font-weight: 500; padding: 12px 16px; color: #1a1a1a; }
+  .nav-tab { font-size: 13px; padding: 12px 16px; border: none; background: transparent; color: #6b6b68; cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; text-decoration: none; display: flex; align-items: center; gap: 4px; }
+  .nav-tab:hover { color: #1a1a1a; background: rgba(0,0,0,0.02); }
+  .nav-tab.active { color: #1a1a1a; font-weight: 500; border-bottom-color: #1D9E75; }
+  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 8px; padding-right: 12px; }
   body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f5f4f0; color: #1a1a1a; min-height: 100vh; padding: 2rem 1rem; }
   .container { max-width: 1200px; margin: 0 auto; }
   .top-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 1.5rem; }
@@ -57,12 +63,18 @@
 </style>
 </head>
 <body>
+<nav>
+  <span class="nav-brand">Ateliê</span>
+  <a href="index.html" class="nav-tab">Vendas</a>
+  <a href="calculadora.html" class="nav-tab active">Precificação</a>
+  <a href="index.html" class="nav-tab">Simulador</a>
+  <div class="nav-right">
+    <span style="font-size:10px;color:#9b9b97">v2.2</span>
+  </div>
+</nav>
 <div class="container">
   <div class="top-bar">
-    <div>
-      <h1>Calculadora de precificação — Ateliê <span style="font-size:10px;color:#9b9b97;font-weight:400;margin-left:8px">v2.1</span></h1>
-      <div class="last-update" id="lastUpdate">Carregando produtos da planilha...</div>
-    </div>
+    <div class="last-update" id="lastUpdate">Carregando produtos da planilha...</div>
     <button class="refresh-btn" id="refreshBtn">Atualizar dados</button>
   </div>
 
@@ -353,5 +365,7 @@ document.getElementById('valorHora').addEventListener('input', renderAll);
 document.getElementById('refreshBtn').addEventListener('click', fetchData);
 fetchData();
 </script>
+
+
 </body>
 </html>
